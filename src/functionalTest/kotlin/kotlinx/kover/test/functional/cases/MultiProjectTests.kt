@@ -62,6 +62,38 @@ internal class MultiProjectTests {
     }
 
     @SlicedGeneratedTest(allTypes = true, allTools = true)
+    fun BuildConfigurator.testSubprojectCovered() {
+        addKoverProject(subprojectPath) {
+            sourcesFrom("testless-common")
+        }
+
+        addKoverProject {
+            sourcesFrom("multiproject-user")
+            dependencyOnProject(subprojectPath)
+
+            koverMerged {
+                enable()
+            }
+        }
+
+        run("koverMergedReport") {
+            checkDefaultBinaryReport()
+            checkDefaultReports(false)
+            checkDefaultMergedReports()
+            xml(defaultMergedXmlReport()) {
+                classCounter("org.jetbrains.UserClass").assertFullyCovered()
+                classCounter("org.jetbrains.CommonClass").assertFullyCovered()
+            }
+
+            subproject(subprojectPath) {
+                checkDefaultBinaryReport(false)
+                checkDefaultMergedReports(false)
+                checkDefaultReports(false)
+            }
+        }
+    }
+
+    @SlicedGeneratedTest(allTypes = true, allTools = true)
     fun BuildConfigurator.testDisabledKover() {
         addKoverProject(subprojectPath) {
             sourcesFrom("multiproject-common")
